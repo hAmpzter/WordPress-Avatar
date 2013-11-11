@@ -151,17 +151,47 @@ class WP_avatar
 	*/
 	public function avatar_page()
 	{
-		$user_id = get_current_user_id();
+		$current_user = null;
+
+		if($_POST['wp_avatar_user'])
+		{
+			$current_user = get_user_by('id', intval($_POST['wp_avatar_user']));
+		}
+		else 
+		{
+			$current_user = wp_get_current_user();
+		}
 		
+		$users = get_users();
+
 		$output = '<div class="wrap">';
+		$output .= '<div id="icon-users" class="icon32"></div>';
+			$output .= '<h2>'. __('Choose user', 'wpa') .'</h2>';
+
+			$output .= '<form method="post">';
+				$output .= '<select name="wp_avatar_user">';
+
+					foreach ($users as $user)
+					{
+						$data = get_user_meta($user->ID, null, true);
+
+						$output .= '<option value="' . $user->ID . '"' . ( $current_user->ID == $user->ID ? ' selected="selected"' : '' ) . '>' . current($data['first_name']) . ' ' . current($data['last_name']) . ' (' . $user->user_email . ')' . '</option>';
+					}
+					
+				$output .= '</select>';
+			$output .= '</form>';
+		$output .= '</div>';
+
+		$output .= '<div class="wrap">';
 			$output .= '<div id="icon-users" class="icon32"></div>';
-			$output .= '<h2>'. __('Change profile picture', 'wpa') .'</h2>';
+			$output .= '<h2>'. sprintf( __( 'Change profile picture for %s','wpa'), $current_user->user_email )  .'</h2>';
 
 			$output .= '<div class="avatar-wrap">';
 
-				$output .= get_avatar( $user_id, 200 );
+				$output .= get_avatar( $current_user->ID, 200 );
 
 				$output .= '<form method="post" enctype="multipart/form-data">';;
+					$output .= '<input type="hidden" name="wp_avatar_user" value="' . $current_user->ID . '">';
 					$output .= '<div class="file-upload button">';
 						$output .= '<label for="avatar-upload">'. __('Change Profile picture', 'wpa') .'</label>';
 						$output .= '<input id="avatar-upload" type="file" name="'. self::$input_field .'" />';
@@ -202,7 +232,7 @@ class WP_avatar
 	*/
 	private function save_avatar( $sourcefile, $size )
 	{
-		$user_id        = get_current_user_id();
+		$user_id        = intval($_POST['wp_avatar_user']);
 		$user           = get_userdata( $user_id );
 		$type           = wp_check_filetype( $this->mime_type );
 		$image          = wp_get_image_editor( $sourcefile );
@@ -221,9 +251,14 @@ class WP_avatar
 		{
 		    $image->resize( $size, $size, true );
 		    $image->save( $path_and_name . $type['ext'] );
-
+		
 		    // Save the name of the file to user_meta
 		    update_user_meta( $user_id, 'avatar', $user->user_login . '_' . $user->ID . '.' . $type['ext'] );
+		}
+		else 
+		{
+			$error_string = $image->get_error_message();
+   			echo '<div id="message" class="error"><p>' . $error_string . '</p></div>';
 		}
 	}
 
