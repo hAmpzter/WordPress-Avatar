@@ -3,8 +3,8 @@
 * Plugin Name: WordPress Local Profile Picture
 * Plugin URI: https://github.com/pontusab/WordPress-Avatar
 * Description: Add local avatars to your profile from WordPress-admin. 
-* Version: 1.0
-* Author: Pontus Abrahamsson
+* Version: 1.1
+* Author: Pontus Abrahamsson & Jonas Skoogh
 * Author URI:  http://pontusab.se
 * License:     MIT
 * License URI: http://www.opensource.org/licenses/mit-license.php
@@ -213,7 +213,7 @@ class WP_avatar
 	*/
 	public function handle_upload()
 	{
-		if ( count( $_FILES ) > 0 ) 
+		if ( count( $_FILES ) > 0 && isset( $_FILES[self::$input_field] ) ) 
 		{
 			require_once( ABSPATH . '/wp-admin/includes/image.php' );
 
